@@ -1,0 +1,15 @@
+[submodule "workspace-Final-Backend"]
+	path = workspace-Final-Backend
+	url = https://github.com/metanet-final-proj/Final-Backend.git
+[submodule "workspace-Final-AI"]
+	path = workspace-Final-AI
+	url = https://github.com/metanet-final-proj/Final_agent.git
+[submodule "workspace-Final-Front"]
+	path = workspace-Final-Front
+	url = https://github.com/metanet-final-proj/Final-Front.git
+[submodule "workspace-mcp-server"]
+	path = workspace-mcp-server
+	url = https://github.com/metanet-final-proj/Final-MCP.git
+[submodule "workspace-Workhub-Backend"]
+	path = workspace-Workhub-Backend
+	url = https://github.com/metanet-final-proj/Final-Workhub-Backend.git
