@@ -121,9 +121,29 @@ if ($WithOps) {
 }
 $arguments += @("up", "-d", "--build", "--remove-orphans")
 
-& docker @arguments
-if ($LASTEXITCODE -ne 0) {
-    exit $LASTEXITCODE
+$previousProcessEnv = @{}
+foreach ($entry in $deploymentEnv.GetEnumerator()) {
+    $name = [string]$entry.Key
+    $previousProcessEnv[$name] = [Environment]::GetEnvironmentVariable($name, "Process")
+    [Environment]::SetEnvironmentVariable($name, [string]$entry.Value, "Process")
+}
+
+try {
+    & docker @arguments
+    $dockerExitCode = $LASTEXITCODE
+}
+finally {
+    foreach ($entry in $previousProcessEnv.GetEnumerator()) {
+        [Environment]::SetEnvironmentVariable(
+            [string]$entry.Key,
+            $entry.Value,
+            "Process"
+        )
+    }
+}
+
+if ($dockerExitCode -ne 0) {
+    exit $dockerExitCode
 }
 
 Write-Host ""
