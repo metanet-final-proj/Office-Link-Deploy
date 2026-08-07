@@ -140,7 +140,7 @@ npm test
 npm run build
 ```
 
-Agent 하네스와 RAG 평가는 각각 [Agent 평가 가이드](workspace-Final-AI/evaluation/agent/README.md), [RAG 평가 가이드](workspace-mcp-server/evaluation/rag/README.md)를 참고합니다.
+Agent 하네스와 RAG 평가는 각각 [Agent 평가 가이드](https://github.com/metanet-final-proj/Final_agent/blob/release/final-polish/evaluation/agent/README.md), [RAG 평가 가이드](https://github.com/metanet-final-proj/Final-MCP/blob/release/final-polish/evaluation/rag/README.md)를 참고합니다.
 
 ## 문서
 
@@ -148,11 +148,11 @@ Agent 하네스와 RAG 평가는 각각 [Agent 평가 가이드](workspace-Final
 - [보안 정책](SECURITY.md)
 - [변경 이력](CHANGELOG.md)
 - [v1.0.0 릴리스 노트](docs/releases/v1.0.0.md)
-- [Final Backend](workspace-Final-Backend/README.md)
-- [Workhub Backend](workspace-Workhub-Backend/README.md)
-- [AI Agent](workspace-Final-AI/README.md)
-- [MCP Server](workspace-mcp-server/README.md)
-- [Frontend](workspace-Final-Front/README.md)
+- [Final Backend](https://github.com/metanet-final-proj/Final-Backend/blob/release/final-polish/README.md)
+- [Workhub Backend](https://github.com/metanet-final-proj/Final-Workhub-Backend/blob/release/final-polish/README.md)
+- [AI Agent](https://github.com/metanet-final-proj/Final_agent/blob/release/final-polish/README.md)
+- [MCP Server](https://github.com/metanet-final-proj/Final-MCP/blob/release/final-polish/README.md)
+- [Frontend](https://github.com/metanet-final-proj/Final-Front/blob/release/final-polish/README.md)
 
 ## 라이선스와 사용 범위
 
