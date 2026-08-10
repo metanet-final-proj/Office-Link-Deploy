@@ -47,6 +47,7 @@ services:
       AI_AGENT_CLIENT_SECRET: ${AI_AGENT_CLIENT_SECRET:?AI_AGENT_CLIENT_SECRET is required}
       MCP_SERVER_CLIENT_SECRET: ${MCP_SERVER_CLIENT_SECRET:?MCP_SERVER_CLIENT_SECRET is required}
       WORKHUB_BACKEND_CLIENT_SECRET: ${WORKHUB_BACKEND_CLIENT_SECRET:?WORKHUB_BACKEND_CLIENT_SECRET is required}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_AZURE_REDIRECT_URI: ${PUBLIC_BASE_URL}/login/oauth2/code/azure
     depends_on:
       final-postgres:
         condition: service_healthy
@@ -322,6 +323,17 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+    networks:
+      - office-link
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - frontend
     networks:
       - office-link
     restart: unless-stopped
