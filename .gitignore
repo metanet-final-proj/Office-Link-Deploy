@@ -2,3 +2,6 @@ deploy/.env
 outputs/
 tmp/
 .agents/
+.codex-review/
+output/
+tools/
