@@ -17,9 +17,9 @@ Office-Link는 회의실, 방문객 주차, 구내식당, 사무용품, 사내 �
 
 ```mermaid
 flowchart LR
-    Browser["브라우저"] -->|HTTP| Front["Vue Frontend"]
-    Front -->|REST / SSE| Final["Final Backend"]
-    Final -->|SSE 호출| Agent["AI Agent"]
+    Browser["브라우저"] -->|HTTP(S)| Front["Vue Frontend"]
+    Front -->|REST 요청 / SSE 응답| Final["Final Backend"]
+    Final -->|POST 요청 / SSE 응답| Agent["AI Agent"]
     Agent -->|MCP| MCP["MCP Server"]
     MCP -->|REST| Workhub["Workhub Backend"]
     Final -. "사용자 승인 변경 요청" .-> Workhub
@@ -37,33 +37,35 @@ flowchart LR
 | `workspace-Final-AI` | 의도 분석, 도메인 라우팅, Tool 선택, 답변 생성·검증 | Python 3.13, FastAPI, LangGraph |
 | `workspace-mcp-server` | 업무 조회 Tool, Compact DTO, RAG 재정렬 | FastMCP, OpenVINO, BGE Re-ranker |
 | `workspace-Workhub-Backend` | 업무·RAG 원장 API, Hybrid Search, 스케줄링 | Java 25, Spring Boot 3.5, pgvector |
-| `deploy` | 전체 서비스와 데이터 저장소의 통합 실행 | Docker Compose, PowerShell |
+| `deploy` | 전체 서비스와 데이터 저장소의 통합 실행 | Docker Compose, PowerShell/Bash |
 
 각 애플리케이션은 독립 Git 저장소이며 이 저장소에서는 Git submodule로 고정된 배포 버전을 관리합니다.
 
 ## 사전 요구사항
 
-- Windows 11과 PowerShell 5.1 이상
-- Docker Desktop 및 WSL 2
+공통 요구사항:
+
+- Docker Engine 또는 Docker Desktop
+- Docker Compose v2
 - Git 2.40 이상
 - Azure OAuth 애플리케이션 정보
 - OpenAI API Key: 음성 인식과 RAG 임베딩에 사용
 - OpenAI 호환 LLM API: OpenAI API 또는 유선 네트워크의 온프레미스 GPU 서버
 
-서비스를 개별 실행하거나 테스트할 때는 Java 25, Node.js 22, Python 3.13이 추가로 필요합니다.
+Windows에서는 PowerShell 5.1 이상과 WSL 2를 권장합니다. Ubuntu에서는 Docker Compose 명령으로 직접 실행할 수 있습니다. 서비스를 개별 실행하거나 테스트할 때는 Java 25, Node.js 22, Python 3.13이 추가로 필요합니다.
 
 ## 빠른 시작
 
 ### 1. 저장소 받기
 
-```powershell
-git clone --recurse-submodules <OFFICE_LINK_DEPLOY_REPOSITORY_URL>
-cd final-project
+```bash
+git clone --recurse-submodules https://github.com/metanet-final-proj/Office-Link-Deploy.git office-link
+cd office-link
 ```
 
 이미 상위 저장소만 받은 경우:
 
-```powershell
+```bash
 git submodule update --init --recursive
 ```
 
@@ -73,10 +75,25 @@ git submodule update --init --recursive
 Copy-Item .\deploy\.env.example .\deploy\.env
 ```
 
+Ubuntu 또는 WSL:
+
+```bash
+cp deploy/.env.example deploy/.env
+chmod 600 deploy/.env
+```
+
 `deploy/.env`에 Azure, OpenAI/온프레미스 LLM, OAuth 서명키, 서비스별 Client Secret, DB 비밀번호를 입력합니다. 실제 비밀값은 Git에 커밋하지 않습니다.
+
+Windows 설정 검증:
 
 ```powershell
 .\deploy\start.ps1 -ValidateOnly
+```
+
+Ubuntu 또는 WSL 설정 검증:
+
+```bash
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml config >/dev/null
 ```
 
 ### 3. 전체 서비스 실행
@@ -85,7 +102,25 @@ Copy-Item .\deploy\.env.example .\deploy\.env
 .\deploy\start.ps1
 ```
 
-브라우저에서 [http://localhost](http://localhost)에 접속합니다. Kafka UI까지 실행하려면 다음 명령을 사용합니다.
+Ubuntu 또는 WSL에서는 다음 명령을 사용합니다.
+
+```bash
+docker compose \
+  --env-file deploy/.env \
+  -f deploy/docker-compose.yml \
+  up -d --build --remove-orphans
+```
+
+Cloudflare Tunnel을 사용하지 않는 로컬 실행에서는 다음과 같이 Tunnel 컨테이너를 제외합니다.
+
+```bash
+docker compose \
+  --env-file deploy/.env \
+  -f deploy/docker-compose.yml \
+  up -d --build --remove-orphans --scale cloudflared=0
+```
+
+브라우저에서 `deploy/.env`의 `PUBLIC_BASE_URL`에 설정한 주소로 접속합니다. Kafka UI까지 실행하려면 Windows에서 다음 명령을 사용합니다.
 
 ```powershell
 .\deploy\start.ps1 -WithOps
@@ -96,6 +131,13 @@ Copy-Item .\deploy\.env.example .\deploy\.env
 ```powershell
 .\deploy\stop.ps1
 .\deploy\start.ps1
+```
+
+Ubuntu 또는 WSL:
+
+```bash
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml --profile ops down
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d --build --remove-orphans
 ```
 
 `stop.ps1`은 Docker volume을 삭제하지 않으므로 PostgreSQL, Redis, Kafka 데이터와 Re-ranker 캐시는 유지됩니다. `deploy/.env`를 수정한 뒤에는 위 순서로 컨테이너를 다시 생성해야 변경값이 반영됩니다.
@@ -140,7 +182,7 @@ npm test
 npm run build
 ```
 
-Agent 하네스와 RAG 평가는 각각 [Agent 평가 가이드](https://github.com/metanet-final-proj/Final_agent/blob/release/final-polish/evaluation/agent/README.md), [RAG 평가 가이드](https://github.com/metanet-final-proj/Final-MCP/blob/release/final-polish/evaluation/rag/README.md)를 참고합니다.
+Agent 하네스와 RAG 평가는 각각 [Agent 평가 가이드](https://github.com/metanet-final-proj/Final_agent/blob/main/evaluation/agent/README.md), [RAG 평가 가이드](https://github.com/metanet-final-proj/Final-MCP/blob/main/evaluation/rag/README.md)를 참고합니다.
 
 ## 문서
 
@@ -148,11 +190,11 @@ Agent 하네스와 RAG 평가는 각각 [Agent 평가 가이드](https://github.
 - [보안 정책](SECURITY.md)
 - [변경 이력](CHANGELOG.md)
 - [v1.0.0 릴리스 노트](docs/releases/v1.0.0.md)
-- [Final Backend](https://github.com/metanet-final-proj/Final-Backend/blob/release/final-polish/README.md)
-- [Workhub Backend](https://github.com/metanet-final-proj/Final-Workhub-Backend/blob/release/final-polish/README.md)
-- [AI Agent](https://github.com/metanet-final-proj/Final_agent/blob/release/final-polish/README.md)
-- [MCP Server](https://github.com/metanet-final-proj/Final-MCP/blob/release/final-polish/README.md)
-- [Frontend](https://github.com/metanet-final-proj/Final-Front/blob/release/final-polish/README.md)
+- [Final Backend](https://github.com/metanet-final-proj/Final-Backend/blob/main/README.md)
+- [Workhub Backend](https://github.com/metanet-final-proj/Final-Workhub-Backend/blob/main/README.md)
+- [AI Agent](https://github.com/metanet-final-proj/Final_agent/blob/main/README.md)
+- [MCP Server](https://github.com/metanet-final-proj/Final-MCP/blob/main/README.md)
+- [Frontend](https://github.com/metanet-final-proj/Final-Front/blob/main/README.md)
 
 ## 라이선스와 사용 범위
 
