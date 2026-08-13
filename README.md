@@ -17,12 +17,12 @@ Office-Link는 회의실, 방문객 주차, 구내식당, 사무용품, 사내 �
 
 ```mermaid
 flowchart LR
-    Browser["브라우저"] -->|HTTP(S)| Front["Vue Frontend"]
-    Front -->|REST 요청 / SSE 응답| Final["Final Backend"]
-    Final -->|POST 요청 / SSE 응답| Agent["AI Agent"]
+    Browser["브라우저"] -->|HTTP 또는 HTTPS| Front["Vue Frontend"]
+    Front -->|REST 요청 및 SSE 응답| Final["Final Backend"]
+    Final -->|POST 요청 및 SSE 응답| Agent["AI Agent"]
     Agent -->|MCP| MCP["MCP Server"]
     MCP -->|REST| Workhub["Workhub Backend"]
-    Final -. "사용자 승인 변경 요청" .-> Workhub
+    Final -->|사용자 승인 후 변경 실행| Workhub
 
     Final --- FinalDB[("PostgreSQL / Redis")]
     Agent --- AgentRedis[("Redis Checkpoint")]
